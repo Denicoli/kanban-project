@@ -1,6 +1,6 @@
 # 🧩 Laravel + Vue.js Kanban Project
 
-This is a full-stack Kanban board application built with **Laravel 12 (API REST)** and **Vue.js 3** as a monolithic SPA. It supports full authentication, board management, draggable columns and tasks, and a scalable API-first architecture — ideal for portfolio and real-world projects.
+This is a full-stack Kanban board application built with **Laravel 12 (API REST)** and **Vue.js 3** as a monolithic SPA. It supports full authentication, board management, draggable columns and tasks, and a scalable API-first architecture.
 
 ---
 
