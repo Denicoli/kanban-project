@@ -11,7 +11,7 @@
         </svg>
         Dashboard
       </router-link>
-      <h1 class="text-2xl font-bold text-gray-900 ml-4">{{ title }}</h1>
+      <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-gray-900 ml-4">{{ title }}</h1>
     </div>
     <div class="relative">
       <button
