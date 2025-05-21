@@ -40,6 +40,18 @@ class BoardController extends Controller
 
         $board = $request->user()->boards()->create($validated);
 
+        $defaultColumns = [
+            ['title' => 'To Do'],
+            ['title' => 'In Progress'],
+            ['title' => 'Done'],
+        ];
+
+        foreach ($defaultColumns as $col) {
+            $board->columns()->create($col);
+        }
+
+        $board->load('columns');
+
         return response()->json($board, Response::HTTP_CREATED);
     }
 
