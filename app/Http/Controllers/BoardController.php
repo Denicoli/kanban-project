@@ -41,6 +41,7 @@ class BoardController extends Controller
         $board = $request->user()->boards()->create($validated);
 
         $defaultColumns = [
+            ['title' => 'Backlog'],
             ['title' => 'To Do'],
             ['title' => 'In Progress'],
             ['title' => 'Done'],
