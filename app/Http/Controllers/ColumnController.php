@@ -47,12 +47,12 @@ class ColumnController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Board $board, Column $column)
+    public function show(Column $column)
     {
         $this->authorize('view', $column);
 
-        if ($column->board_id !== $board->id) {
-            return response()->json(['error' => 'Column does not belong to the specified board.'], Response::HTTP_BAD_REQUEST);
+        if (!$column) {
+            return response()->json(['message' => 'Column not found.'], Response::HTTP_NOT_FOUND);
         }
 
         $column->load('tasks');
@@ -63,7 +63,7 @@ class ColumnController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Board $board, Column $column)
+    public function update(Request $request, Column $column)
     {
         $this->authorize('update', $column);
 
@@ -80,13 +80,13 @@ class ColumnController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Board $board, Column $column)
+    public function destroy(Column $column)
     {
-        $this->authorize('delete', $column);
-
-        if ($column->board_id !== $board->id) {
-            return response()->json(['error' => 'Column does not belong to the specified board.'], Response::HTTP_BAD_REQUEST);
+        if ($column->tasks()->exists()) {
+            return response()->json(['error' => 'Cannot delete column with tasks.'], Response::HTTP_BAD_REQUEST);
         }
+
+        $this->authorize('delete', $column);
 
         $column->delete();
 
