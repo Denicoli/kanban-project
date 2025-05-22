@@ -60,13 +60,14 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Column $column, Task $task)
+    public function update(Request $request, Task $task)
     {
-        $this->authorize('update', $column->board);
-
-        if ($task->column_id !== $column->id) {
-            return response()->json(['error' => 'Task does not belong to the specified column.'], Response::HTTP_BAD_REQUEST);
+        if ($request->has('column_id')) {
+            $task->column_id = $request->input('column_id');
+            $task->setRelation('column', Column::find($task->column_id));
         }
+
+        $this->authorize('update', $task);
 
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -75,7 +76,7 @@ class TaskController extends Controller
             'order' => 'sometimes|required|integer',
         ]);
 
-        $task->update($request->only(['title', 'description', 'due_date', 'order']));
+        $task->update($request->only(['title', 'description', 'due_date', 'order', 'column_id']));
 
         return response()->json($task, Response::HTTP_OK);
     }
