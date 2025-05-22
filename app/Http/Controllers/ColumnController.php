@@ -67,10 +67,6 @@ class ColumnController extends Controller
     {
         $this->authorize('update', $column);
 
-        if ($column->board_id !== $board->id) {
-            return response()->json(['error' => 'Column does not belong to the specified board.'], Response::HTTP_BAD_REQUEST);
-        }
-
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'order' => 'sometimes|required|integer',
