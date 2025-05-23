@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-between items-center px-6 py-4 bg-white shadow-md border-b border-gray-200 sticky top-0">
+  <div class="flex justify-between items-center px-6 py-4 bg-gray-200 shadow-md border-b border-gray-200 sticky top-0">
     <div class="flex items-center space-x-4">
       <router-link
         v-if="showBack"
@@ -17,7 +17,7 @@
       <button
         id="user-button"
         @click="toggleUserMenu"
-        class="bg-gray-200 p-2 rounded-full hover:bg-gray-50 transition"
+        class="bg-gray-100 p-2 rounded-full hover:bg-white transition"
       >
         <UserIcon class="w-5 h-5 text-gray-600" />
       </button>
