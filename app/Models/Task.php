@@ -15,6 +15,8 @@ class Task extends Model
         'description',
         'due_date',
         'order',
+        'priority',
+        'status',
     ];
 
     public function column()

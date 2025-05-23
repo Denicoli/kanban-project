@@ -36,9 +36,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'order' => 'required|integer',
+            'priority' => 'sometimes|string|in:low,medium,high,urgent',
+            'status' => 'sometimes|string|in:not-started,in-research,on-track,code-review,completed',
         ]);
 
-        $task = $column->tasks()->create($request->only(['title', 'description', 'due_date', 'order']));
+        $task = $column->tasks()->create($request->only(['title', 'description', 'due_date', 'order', 'priority', 'status']));
 
         return response()->json($task, Response::HTTP_CREATED);
     }
@@ -74,9 +76,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'order' => 'sometimes|required|integer',
+            'priority' => 'sometimes|string|in:low,medium,high,urgent',
+            'status' => 'sometimes|string|in:not-started,in-research,on-track,code-review,completed',
         ]);
 
-        $task->update($request->only(['title', 'description', 'due_date', 'order', 'column_id']));
+        $task->update($request->only(['title', 'description', 'due_date', 'order', 'column_id', 'priority', 'status']));
 
         return response()->json($task, Response::HTTP_OK);
     }
