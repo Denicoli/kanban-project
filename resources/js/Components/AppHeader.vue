@@ -6,10 +6,8 @@
         to="/"
         class="flex items-center text-blue-600 hover:underline font-semibold"
       >
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        Dashboard
+        <ChevronLeftIcon class="w-5 h-5" />
+        <span class="ml-2 hidden sm:inline">Dashboard</span>
       </router-link>
       <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-gray-900 ml-4">{{ title }}</h1>
     </div>
