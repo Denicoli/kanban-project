@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center min-w-[16rem] max-w-xs w-full">
+  <div class="flex flex-col items-center min-w-[16rem] max-w-xs w-full sm:max-w-sm md:max-w-md lg:max-w-xl xl:max-w-xl">
     <div class="flex items-center justify-between w-full mb-2 ml-2">
       <div class="flex items-center gap-1">
         <span v-if="!editing" class="font-bold cursor-pointer" @click="startEdit">
@@ -20,11 +20,7 @@
       </div>
       <div class="relative">
         <button @click="emit('toggle-menu')" class="p-1 rounded hover:bg-gray-200">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="1.5"/>
-            <circle cx="12" cy="12" r="1.5"/>
-            <circle cx="12" cy="19" r="1.5"/>
-          </svg>
+          <EllipsisVerticalIcon class="w-4 h-4" />
         </button>
         <div
           v-if="menuOpen"
@@ -45,10 +41,8 @@
       style="max-height: 400px; min-height: 100px;"
       @change="onMoveTask"
     >
-      <template #item="{ element }">
-        <div class="mb-2 p-2 bg-gray-100 rounded cursor-move">
-          {{ element.title }}
-        </div>
+      <template #item="{ element: task }">
+        <Task :task="task" />
       </template>
     </draggable>
     <button 
@@ -64,6 +58,7 @@
 <script setup>
 import draggable from 'vuedraggable'
 import { defineProps, defineEmits, ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import Task from './Task.vue'
 
 const props = defineProps({
   title: String,
@@ -138,20 +133,3 @@ watch(() => props.title, (val) => {
   newTitle.value = val
 })
 </script>
-
-<style scoped>
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
-    border-radius: 4px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #e5e7eb transparent;
-  }
-</style>
