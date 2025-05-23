@@ -5,8 +5,6 @@
     <div class="p-6 min-h-screen">
       <!-- Board Header -->
       <div class="flex justify-end items-end mb-4">
-        <!-- <p class="text-gray-600 text-lg font-medium">Name</p>
-        <p class="text-gray-600 text-lg font-medium">Description</p> -->
         <button 
           @click="openModal"
           class="flex items-center space-x-2 bg-blue-600 text-white font-semibold rounded-full px-4 py-2 transition-colors
@@ -18,7 +16,7 @@
       </div>
 
       <!-- Board List -->
-      <div v-if="boards.length" class="space-y-2">
+      <div v-if="boards.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <div v-for="board in boards" :key="board.id" class="flex justify-between items-center bg-white shadow p-4 rounded-lg hover:shadow-md transition">
           <div class="flex-1">
             <div class="font-semibold">{{ board.name }}</div>
