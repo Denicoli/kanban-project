@@ -57,7 +57,7 @@
 
 <script setup>
 import draggable from 'vuedraggable'
-import { defineProps, defineEmits, ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import Task from './Task.vue'
 
 const props = defineProps({
