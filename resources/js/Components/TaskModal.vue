@@ -22,6 +22,9 @@
           v-model="form.due_date"
           type="date"
           class="border rounded w-full px-2 py-1 mb-4"
+          ref="dueDateInput"
+          :min="today"
+          @mousedown.prevent="openDatePicker"
         />
 
         <label class="block text-sm font-medium mb-1">Status</label>
@@ -53,7 +56,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+const dueDateInput = ref(null)
 
 const props = defineProps({
   isOpen: Boolean,
@@ -77,11 +82,26 @@ watch(() => props.task, (val) => {
   form.value.priority = val?.priority || 'low'
 })
 
+const today = computed(() => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+})
+
 const close = () => emit('close')
 const submit = () => {
   if (form.value.title.trim()) {
     emit('submit', { ...form.value })
     close()
+  }
+}
+const openDatePicker = () => {
+  if (dueDateInput.value) {
+    dueDateInput.value.showPicker?.()
+    dueDateInput.value.focus()
+    dueDateInput.value.click()
   }
 }
 </script>
