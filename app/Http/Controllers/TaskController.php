@@ -48,13 +48,9 @@ class TaskController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Column $column, Task $task)
+    public function show(Task $task)
     {
-        $this->authorize('view', $column->board);
-
-        if ($task->column_id !== $column->id) {
-            return response()->json(['error' => 'Task does not belong to the specified column.'], Response::HTTP_BAD_REQUEST);
-        }
+        $this->authorize('view', $task);
 
         return response()->json($task, Response::HTTP_OK);
     }
@@ -88,13 +84,9 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Column $column, Task $task)
+    public function destroy(Task $task)
     {
-        $this->authorize('delete', $column->board);
-
-        if ($task->column_id !== $column->id) {
-            return response()->json(['error' => 'Task does not belong to the specified column.'], Response::HTTP_BAD_REQUEST);
-        }
+        $this->authorize('delete', $task);
 
         $task->delete();
         
