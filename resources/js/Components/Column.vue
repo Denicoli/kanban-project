@@ -11,8 +11,8 @@
           v-model="newTitle"
           @blur="submitEdit"
           @keyup.enter="submitEdit"
-          class="border rounded-md px-1 py-0.5 text-sm font-bold"
-          :style="{ width: Math.max(newTitle.length * 0.75, 6) + 'ch' }"
+          @keyup.esc="cancelEdit"
+          class="border rounded-md px-2 py-1 text-sm font-bold bg-white shadow focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-[220px] min-w-[180px] max-w-[320px]"
         />
         <button v-if="!editing" @click="startEdit" class="text-gray-400 hover:text-blue-600">
           <PencilIcon class="w-4 h-4" />
