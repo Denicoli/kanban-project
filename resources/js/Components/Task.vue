@@ -1,5 +1,8 @@
 <template>
-  <div class="bg-white rounded-xl shadow p-4 mb-4 border border-gray-100 hover:shadow-lg transition relative">
+  <div 
+    class="bg-white rounded-xl shadow p-4 mb-4 border border-gray-100 hover:shadow-lg transition relative"
+    @click.stop="emitEdit"
+  >
     <div class="flex items-center justify-between mb-1">
       <span
         class="text-xs font-semibold px-2 py-0.5 rounded-full"
