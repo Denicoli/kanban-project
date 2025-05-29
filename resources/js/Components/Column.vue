@@ -42,7 +42,11 @@
       @change="onMoveTask"
     >
       <template #item="{ element: task }">
-        <Task :task="task" />
+        <Task 
+          :task="task"
+          @edit="emit('edit-task', task)"
+          @delete="emit('delete-task', task)"
+        />
       </template>
     </draggable>
     <button 
@@ -65,7 +69,7 @@ const props = defineProps({
   tasks: { type: Array, default: () => [] },
   menuOpen: Boolean
 })
-const emit = defineEmits(['edit', 'delete', 'add-task', 'add-column', 'move-task', 'toggle-menu', 'close-menu'])
+const emit = defineEmits(['edit', 'delete', 'add-task', 'add-column', 'move-task', 'edit-task', 'delete-task', 'toggle-menu', 'close-menu'])
 
 const editing = ref(false)
 const newTitle = ref(props.title)
