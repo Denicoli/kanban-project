@@ -1,20 +1,24 @@
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
     <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transition-all">
-      <h4 class="font-bold text-lg mb-6 text-gray-800">{{ task ? 'Edit Task' : 'New Task' }}</h4>
-      <form @submit.prevent="submit" class="space-y-4">
+      <h4 class="font-bold text-lg mb-6 text-gray-800" id="modal-title">{{ task ? 'Edit Task' : 'New Task' }}</h4>
+      <form @submit.prevent="submit" class="space-y-4" novalidate>
         <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Title</label>
+          <label for="task-title" class="block text-sm font-medium mb-1 text-gray-700">Title</label>
           <input
+            id="task-title"
+            ref="titleInput"
             v-model="form.title"
             class="border border-gray-300 rounded-lg w-full px-3 py-2 mb-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             placeholder="Task title"
-            autofocus
+            required
           />
+          <p v-if="titleError" id="title-error" class="text-xs text-red-600 mt-1">{{ titleError }}</p>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Description</label>
+          <label for="task-desc" class="block text-sm font-medium mb-1 text-gray-700">Description</label>
           <textarea
+            id="task-desc"
             v-model="form.description"
             class="border border-gray-300 rounded-lg w-full px-3 py-2 mb-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             placeholder="Task description"
@@ -22,8 +26,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Due Date</label>
+          <label for="task-due" class="block text-sm font-medium mb-1 text-gray-700">Due Date</label>
           <input
+            id="task-due"
             v-model="form.due_date"
             type="date"
             class="border border-gray-300 rounded-lg w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
@@ -40,13 +45,8 @@
               v-for="option in statusOptions"
               :key="option.value"
               type="button"
-              @click="form.status = option.value"
-              :class="[
-                'px-3 py-1 rounded-full text-xs font-semibold focus:outline-none transition',
-                form.status === option.value
-                  ? option.selected
-                  : option.unselected
-              ]"
+              @click="setStatus(option.value)"
+              :class="optionButtonClass(form.status === option.value, option)"
             >
               {{ option.label }}
             </button>
@@ -60,13 +60,8 @@
               v-for="option in priorityOptions"
               :key="option.value"
               type="button"
-              @click="form.priority = option.value"
-              :class="[
-                'px-3 py-1 rounded-full text-xs font-semibold focus:outline-none transition',
-                form.priority === option.value
-                  ? option.selected
-                  : option.unselected
-              ]"
+              @click="setPriority(option.value)"
+              :class="optionButtonClass(form.priority === option.value, option)"
             >
               {{ option.label }}
             </button>
@@ -84,9 +79,11 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 
 const dueDateInput = ref(null)
+const titleInput = ref(null)
+const titleError = ref('')
 
 const props = defineProps({
   isOpen: Boolean,
@@ -102,6 +99,7 @@ const form = ref({
   priority: props.task?.priority || 'low'
 })
 
+
 watch(() => props.task, (val) => {
   form.value = {
     title: val?.title || '',
@@ -109,6 +107,14 @@ watch(() => props.task, (val) => {
     due_date: val?.due_date || '',
     status: val?.status || 'not-started',
     priority: val?.priority || 'low'
+  }
+})
+
+watch(() => props.isOpen, (open) => {
+  if (open) {
+    nextTick(() => {
+      titleInput.value?.focus()
+    })
   }
 })
 
@@ -122,18 +128,32 @@ const today = computed(() => {
 
 const close = () => emit('close')
 const submit = () => {
-  if (form.value.title.trim()) {
-    emit('submit', { ...form.value })
-    close()
+  if (!form.value.title.trim()) {
+    titleError.value = 'Title is required.'
+    titleInput.value?.focus()
+    return
   }
+  titleError.value = ''
+  emit('submit', { ...form.value })
+  close()
 }
 const openDatePicker = () => {
   if (dueDateInput.value) {
     dueDateInput.value.showPicker?.()
     dueDateInput.value.focus()
-    dueDateInput.value.click()
   }
 }
+
+const setStatus = (value) => {
+  form.value.status = value
+}
+const setPriority = (value) => {
+  form.value.priority = value
+}
+const optionButtonClass = (selected, option) => [
+  'px-3 py-1 rounded-full text-xs font-semibold focus:outline-none transition',
+  selected ? option.selected : option.unselected
+]
 
 const statusOptions = [
   {
