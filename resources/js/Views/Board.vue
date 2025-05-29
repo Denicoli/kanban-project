@@ -26,6 +26,8 @@
               @add-task="() => addTaskToColumn(column)"
               @add-column="() => addColumnAfter(idx)"
               @move-task="evt => handleMoveTask(evt, column)"
+              @edit-task="onEditTask"
+              @delete-task="onDeleteTask"
             />
           </template>
         </draggable>
@@ -39,8 +41,15 @@
       </div>
       <TaskModal
         :isOpen="showTaskModal"
+        :task="selectedTask"
         @close="showTaskModal = false"
         @submit="handleTaskSubmit"
+      />
+      <DeleteTaskModal 
+        :isOpen="showDeleteModal"
+        :task="taskToDelete"
+        @close="showDeleteModal = false"
+        @delete="confirmDeleteTask"
       />
       <ColumnModal
         :isOpen="showColumnModal"
@@ -60,12 +69,17 @@ import AppHeader from '@/Components/AppHeader.vue'
 import Column from '@/Components/Column.vue'
 import TaskModal from '@/Components/TaskModal.vue'
 import ColumnModal from '@/Components/ColumnModal.vue'
+import DeleteTaskModal from '@/Components/DeleteTaskModal.vue'
 
 const route = useRoute()
 const board = ref(null)
 const columns = ref([])
 
 const showTaskModal = ref(false)
+const selectedTask = ref(null)
+const showDeleteModal = ref(false)
+const taskToDelete = ref(null)
+
 const selectedColumn = ref(null)
 const showColumnModal = ref(false)
 const openMenuColumnId = ref(null)
@@ -90,7 +104,38 @@ const addColumnAfter = async (idx) => {
   columns.value.splice(idx + 1, 0, { ...data, tasks: [] })
 }
 
+const createTask = async (taskData) => {
+  if (!selectedColumn.value) return
+
+  const newTask = {
+    ...taskData,
+    column_id: selectedColumn.value.id,
+    order: selectedColumn.value.tasks.length,
+  }
+
+  const { data } = await api.post(`/columns/${selectedColumn.value.id}/tasks`, newTask)
+  selectedColumn.value.tasks.push(data)
+  showTaskModal.value = false
+}
+
+const updateTask = async (taskData) => {
+  const updatedTask = {
+    ...selectedTask.value,
+    ...taskData,
+    column_id: selectedColumn.value.id,
+  }
+
+  const { data } = await api.put(`/tasks/${selectedTask.value.id}`, updatedTask)  
+
+  const taskIndex = selectedColumn.value.tasks.findIndex(t => t.id === selectedTask.value.id)
+  if (taskIndex !== -1) {
+    selectedColumn.value.tasks[taskIndex] = data
+  }
+  showTaskModal.value = false
+}
+
 const addTaskToColumn = (column) => {
+  selectedTask.value = null
   selectedColumn.value = column
   showTaskModal.value = true
 }
@@ -108,6 +153,34 @@ const onColumnsReorder = async (evt) => {
   await Promise.all(updatePromises)
 }
 
+const onEditTask = (task) => {
+  selectedTask.value = task
+  selectedColumn.value = columns.value.find(col => col.id === task.column_id)
+  if (!selectedColumn.value) {
+    selectedColumn.value = columns.value.find(col => col.tasks.some(t => t.id === task.id));
+  }
+  showTaskModal.value = true
+}
+
+const onDeleteTask = (task) => {
+  taskToDelete.value = task
+  showDeleteModal.value = true
+}
+
+const confirmDeleteTask = async () => {
+  if (!taskToDelete.value) return
+
+  const col = columns.value.find(col => col.id === taskToDelete.value.column_id)
+  
+  if (col) {
+    col.tasks = col.tasks.filter(t => t.id !== taskToDelete.value.id)
+  }
+
+  await api.delete(`/tasks/${taskToDelete.value.id}`)
+  showDeleteModal.value = false
+  taskToDelete.value = null
+}
+
 const handleCreateColumn = async (title) => {
   if (!title) return
   const newColumn = {
@@ -120,17 +193,12 @@ const handleCreateColumn = async (title) => {
 }
 
 const handleTaskSubmit = async (taskData) => {
-  const newTask = {
-    title: taskData.title,
-    description: taskData.description,
-    status: taskData.status,
-    priority: taskData.priority,
-    due_date: taskData.due_date,
-    order: selectedColumn.value.tasks.length,
-    column_id: selectedColumn.value.id,
+  if (selectedTask.value) {
+    await updateTask(taskData)
+  } else {
+    await createTask(taskData)
   }
-  const { data } = await api.post(`/columns/${selectedColumn.value.id}/tasks`, newTask)
-  selectedColumn.value.tasks.push(data)
+  selectedTask.value = null
   showTaskModal.value = false
   selectedColumn.value = null
 }
@@ -140,12 +208,51 @@ const handleMoveTask = (evt, toColumn) => {
     const task = evt.added.element
     if (!task.id) return
     task.column_id = toColumn.id
-    task.order = evt.added.newIndex
-    api.put(`/tasks/${task.id}`, { 
+  }
+
+  for (let i = 0; i < toColumn.tasks.length; i++) {
+    const t = toColumn.tasks[i]
+    t.order = i
+    api.put(`/tasks/${t.id}`, {
       column_id: toColumn.id,
-      order: evt.added.newIndex,
-      title: task.title
+      order: t.order,
+      title: t.title
     })
+  }
+}
+
+const generateTestTasks = async () => {
+  const testTaskExists = columns.value.some(col =>
+    col.tasks.some(task => task.title && task.title.startsWith('Test Task'))
+  )
+  if (testTaskExists) return
+
+  if (!columns.value.length) return
+  let statuses = ['not-started', 'in-research', 'on-track', 'code-review', 'completed']
+  let priorities = ['low', 'medium', 'high', 'urgent']
+  const today = new Date()
+  for (let i = 0; i < 20; i++) {
+    const colIdx = i % columns.value.length
+    const column = columns.value[colIdx]
+
+    const dueDate = new Date(today)
+    dueDate.setDate(today.getDate() + (i % 8))
+    const yyyy = dueDate.getFullYear()
+    const mm = String(dueDate.getMonth() + 1).padStart(2, '0')
+    const dd = String(dueDate.getDate()).padStart(2, '0')
+    const due_date = `${yyyy}-${mm}-${dd}`
+
+    const newTask = {
+      title: `Test Task ${i + 1}`,
+      description: `This is a test task #${i + 1}`,
+      due_date,
+      status: statuses[i % statuses.length],
+      priority: priorities[i % priorities.length],
+      order: column.tasks.length,
+      column_id: column.id,
+    }
+    const { data } = await api.post(`/columns/${column.id}/tasks`, newTask)
+    column.tasks.push(data)
   }
 }
 
@@ -160,5 +267,6 @@ onMounted(async () => {
       ...col,
       tasks: col.tasks || []
     }))
+  // generateTestTasks()
 })
 </script>
