@@ -16,20 +16,28 @@
       </div>
 
       <!-- Board List -->
-      <div v-if="boards.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <div v-for="board in boards" :key="board.id" class="flex justify-between items-center bg-white shadow p-4 rounded-lg hover:shadow-md transition">
-          <div class="flex-1">
-            <div class="font-semibold">{{ board.name }}</div>
-            <div class="text-gray-500">{{ board.description }}</div>
-          </div>
-          <div class="flex space-x-2">
-            <button @click="goToBoard(board.id)" class="text-green-600 hover:underline">
-              <EyeIcon class="w-6 h-6" />
-            </button>
-            <button @click="editBoard(board)" class="text-yellow-500 hover:underline">
+      <div v-if="boards.length" class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div 
+          v-for="board in boards" 
+          :key="board.id" 
+          class="relative bg-white shadow p-4 rounded-lg hover:shadow-md transition cursor-pointer group"
+          @click.stop="goToBoard(board.id)"
+        >
+          <div class="font-semibold text-lg mb-1 text-gray-800 truncate">{{ board.name }}</div>
+          <div class="text-gray-500 text-sm mb-2 truncate">{{ board.description }}</div>
+          <div class="absolute top-3 right-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition">
+            <button 
+              @click.stop="editBoard(board)"
+              class="text-yellow-500 hover:text-yellow-600 hover:bg-yellow-200 rounded-md p-1 transition"
+              title="Edit"
+            >
               <PencilIcon class="w-5 h-5" />
             </button>
-            <button @click="deleteBoard(board.id)" class="text-red-500 hover:underline">
+            <button 
+              @click.stop="openDeleteBoardModal(board)" 
+              class="text-red-500 hover:text-red-600 hover:bg-red-200 rounded-md p-1 transition"
+              title="Delete"
+            >
               <TrashIcon class="w-5 h-5" />
             </button>
           </div>
@@ -44,6 +52,12 @@
         @created="fetchBoards"
         :board="selectedBoard"
       />
+      <DeleteBoardModal
+        :isOpen="showDeleteBoardModal"
+        :board="boardToDelete"
+        @close="showDeleteBoardModal = false"
+        @delete="confirmDeleteBoard"
+      />
     </div>
   </div>
 </template>
@@ -54,6 +68,7 @@ import api from '../axios'
 import { useRouter } from 'vue-router'
 import BoardModal from '@/Components/BoardModal.vue'
 import AppHeader from '@/Components/AppHeader.vue'
+import DeleteBoardModal from '@/Components/DeleteBoardModal.vue'
 
 const router = useRouter()
 const user = ref(null)
@@ -61,6 +76,8 @@ const boards = ref([])
 const showUserMenu = ref(false)
 const showModal = ref(false)
 const selectedBoard = ref(null)
+const showDeleteBoardModal = ref(false)
+const boardToDelete = ref(null)
 
 const fetchUser = async () => {
   try {
@@ -95,28 +112,20 @@ const editBoard = (board) => {
   showModal.value = true
 }
 
-const deleteBoard = async (boardId) => {
-  if (confirm('Are you sure you want to delete this board?')) {
-    try {
-      await api.delete(`/boards/${boardId}`)
-      fetchBoards()
-    } catch (error) {
-      console.error('Failed to delete board:', error)
-    }
-  }
+const openDeleteBoardModal = (board) => {
+  boardToDelete.value = board
+  showDeleteBoardModal.value = true
 }
 
-const toggleUserMenu = () => {
-  showUserMenu.value = !showUserMenu.value
-}
-
-const logout = async () => {
+const confirmDeleteBoard = async () => {
+  if (!boardToDelete.value) return
   try {
-    await api.post('/logout')
-    localStorage.removeItem('token')
-    router.push('/login')
+    await api.delete(`/boards/${boardToDelete.value.id}`)
+    fetchBoards()
+    showDeleteBoardModal.value = false
+    boardToDelete.value = null
   } catch (error) {
-    console.error('Error logging out:', error)
+    console.error('Failed to delete board: ', error)
   }
 }
 
@@ -139,6 +148,3 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 </script>
-
-<style scoped>
-</style>
