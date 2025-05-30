@@ -19,9 +19,6 @@ class BoardController extends Controller
         $this->authorize('viewAny', Board::class);
 
         $boards = $request->user()->boards()->get();
-        if ($boards->isEmpty()) {
-            return response()->json(['message' => 'No boards found.'], Response::HTTP_NOT_FOUND);
-        }
 
         return response()->json($boards, Response::HTTP_OK);
     }
