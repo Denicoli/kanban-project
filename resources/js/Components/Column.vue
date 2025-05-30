@@ -18,19 +18,16 @@
           <PencilIcon class="w-4 h-4" />
         </button>
       </div>
-      <div class="relative">
-        <button @click="emit('toggle-menu')" class="p-1 rounded hover:bg-gray-200">
-          <EllipsisVerticalIcon class="w-4 h-4" />
-        </button>
-        <div
-          v-if="menuOpen"
-          ref="menuRef"
-          class="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded z-10"
+      <div>
+        <button
+          :disabled="tasks.length > 0"
+          @click.stop="handleDeleteColumn"
+          class="p-1 rounded hover:bg-gray-200"
+          :class="tasks.length > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-red-600'"
+          :title="tasks.length > 0 ? 'Cannot delete a column with tasks' : 'Delete column'"
         >
-          <button @mousedown.stop="emitDelete" class="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100">
-            Delete
-          </button>
-        </div>
+          <TrashIcon class="w-4 h-4" />
+        </button>
       </div>
     </div>
     <draggable
@@ -61,25 +58,25 @@
 
 <script setup>
 import draggable from 'vuedraggable'
-import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import Task from './Task.vue'
 
 const props = defineProps({
   title: String,
   tasks: { type: Array, default: () => [] },
-  menuOpen: Boolean
+  id: [String, Number]
 })
-const emit = defineEmits(['edit', 'delete', 'add-task', 'add-column', 'move-task', 'edit-task', 'delete-task', 'toggle-menu', 'close-menu'])
+const emit = defineEmits(['edit', 'delete', 'add-task', 'add-column', 'move-task', 'edit-task', 'delete-task', 'delete-column'])
 
 const editing = ref(false)
 const newTitle = ref(props.title)
 const inputRef = ref(null)
-const menuRef = ref(null)
 
-const emitDelete = () => {
-  emit('delete')
-  emit('close-menu')
-}
+const columnData = computed(() => ({
+  id: props.id,
+  title: props.title,
+  tasks: props.tasks
+}))
 
 const emitAddTask = () => {
   emit('add-task')
@@ -109,29 +106,10 @@ const cancelEdit = () => {
   newTitle.value = props.title
 }
 
-const handleClickOutsideEdit = (event) => {
-  if (editing.value && inputRef.value && !inputRef.value.contains(event.target)) {
-    cancelEdit()
-  }
+const handleDeleteColumn = () => {
+  if (props.tasks.length > 0) return
+  emit('delete-column', columnData.value)
 }
-
-const handleClickOutsideMenu = (event) => {
-  if (props.menuOpen && menuRef.value && !menuRef.value.contains(event.target)) {
-    emit('close-menu')
-  }
-}
-
-watch(editing, (val) => {
-  if (val) document.addEventListener('mousedown', handleClickOutsideEdit)
-  else document.removeEventListener('mousedown', handleClickOutsideEdit)
-})
-watch(() => props.menuOpen, (open) => {
-  if (open) document.addEventListener('mousedown', handleClickOutsideMenu)
-  else document.removeEventListener('mousedown', handleClickOutsideMenu)
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('mousedown', handleClickOutsideEdit)
-})
 
 watch(() => props.title, (val) => {
   newTitle.value = val
