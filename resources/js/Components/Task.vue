@@ -28,7 +28,7 @@
     <div class="flex items-center justify-between mt-4">
       <div v-if="task.due_date" class="flex items-center text-xs text-gray-400">
         <CalendarIcon class="w-4 h-4 mr-1" />
-        {{ new Date(task.due_date).toLocaleDateString() }}
+        {{ dueDateFormatted }}
       </div>
       <span
         class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full"
@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount, computed } from 'vue'
 
 const props = defineProps({
   task: {
@@ -76,6 +76,12 @@ onBeforeUnmount(() => {
   document.removeEventListener('mousedown', handleClickOutside)
 })
 
+const dueDateFormatted = computed(() => {
+  if (!props.task.due_date) return ''
+  const [year, month, day] = props.task.due_date.split('-')
+  return `${month}/${day}/${year}`
+})
+
 // Map backend status to label and color
 const statusMap = {
   'not-started': { label: 'Not Started', color: 'bg-purple-100 text-purple-700' },
@@ -84,18 +90,27 @@ const statusMap = {
   'code-review': { label: 'Code Review', color: 'bg-blue-100 text-blue-700' },
   'completed': { label: 'Complete', color: 'bg-green-100 text-green-700' }
 }
-const status = props.task.status || 'not-started'
-const statusLabel = statusMap[status]?.label || 'Not Started'
-const statusClass = statusMap[status]?.color || 'bg-purple-100 text-purple-700'
+const statusLabel = computed(() => {
+  const status = props.task.status || 'not-started'
+  return statusMap[status]?.label || 'Not Started'
+})
+const statusClass = computed(() => {
+  const status = props.task.status || 'not-started'
+  return statusMap[status]?.color || 'bg-purple-100 text-purple-700'
+})
 
-// Priority badge styling (background and text color)
 const priorityMap = {
   'low':    { label: 'Low',    badge: 'bg-blue-100 text-blue-700' },
   'medium': { label: 'Medium', badge: 'bg-yellow-100 text-yellow-700' },
   'high':   { label: 'High',   badge: 'bg-red-100 text-red-700' },
   'urgent': { label: 'Urgent', badge: 'bg-pink-100 text-pink-700' }
 }
-const priority = props.task.priority || 'low'
-const priorityLabel = priorityMap[priority]?.label || 'Low'
-const priorityBadgeClass = priorityMap[priority]?.badge || 'bg-blue-100 text-blue-700'
+const priorityLabel = computed(() => {
+  const priority = props.task.priority || 'low'
+  return priorityMap[priority]?.label || 'Low'
+})
+const priorityBadgeClass = computed(() => {
+  const priority = props.task.priority || 'low'
+  return priorityMap[priority]?.badge || 'bg-blue-100 text-blue-700'
+})
 </script>
