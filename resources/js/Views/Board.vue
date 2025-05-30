@@ -16,6 +16,7 @@
           <template #item="{ element: column, index: idx }">
             <Column
               :key="column.id"
+              :id="column.id"
               :title="column.title"
               :tasks="column.tasks"
               :menu-open="openMenuColumnId === column.id"
@@ -28,6 +29,7 @@
               @move-task="evt => handleMoveTask(evt, column)"
               @edit-task="onEditTask"
               @delete-task="onDeleteTask"
+              @delete-column="onDeleteColumn"
             />
           </template>
         </draggable>
@@ -46,15 +48,21 @@
         @submit="handleTaskSubmit"
       />
       <DeleteTaskModal 
-        :isOpen="showDeleteModal"
+        :isOpen="showDeleteTaskModal"
         :task="taskToDelete"
-        @close="showDeleteModal = false"
+        @close="showDeleteTaskModal = false"
         @delete="confirmDeleteTask"
       />
       <ColumnModal
         :isOpen="showColumnModal"
         @close="showColumnModal = false"
         @submit="handleCreateColumn"
+      />
+      <DeleteColumnModal
+        :is-open="showDeleteColumnModal"
+        :column="columnToDelete"
+        @close="showDeleteColumnModal = false"
+        @delete="confirmDeleteColumn"
       />
     </div>
   </div>
@@ -70,6 +78,7 @@ import Column from '@/Components/Column.vue'
 import TaskModal from '@/Components/TaskModal.vue'
 import ColumnModal from '@/Components/ColumnModal.vue'
 import DeleteTaskModal from '@/Components/DeleteTaskModal.vue'
+import DeleteColumnModal from '@/Components/DeleteColumnModal.vue'
 
 const route = useRoute()
 const board = ref(null)
@@ -77,12 +86,14 @@ const columns = ref([])
 
 const showTaskModal = ref(false)
 const selectedTask = ref(null)
-const showDeleteModal = ref(false)
+const showDeleteTaskModal = ref(false)
 const taskToDelete = ref(null)
 
 const selectedColumn = ref(null)
 const showColumnModal = ref(false)
 const openMenuColumnId = ref(null)
+const showDeleteColumnModal = ref(false)
+const columnToDelete = ref(null)
 
 const editColumn = async (column, newTitle) => {
   column.title = newTitle
@@ -122,14 +133,21 @@ const updateTask = async (taskData) => {
   const updatedTask = {
     ...selectedTask.value,
     ...taskData,
-    column_id: selectedColumn.value.id,
+    column_id: selectedTask.value.column_id,
   }
 
   const { data } = await api.put(`/tasks/${selectedTask.value.id}`, updatedTask)  
 
-  const taskIndex = selectedColumn.value.tasks.findIndex(t => t.id === selectedTask.value.id)
-  if (taskIndex !== -1) {
-    selectedColumn.value.tasks[taskIndex] = data
+  const col = columns.value.find(col => col.id === data.column_id)
+  if (col) {
+    const taskIndex = col.tasks.findIndex(t => t.id === data.id)
+    if (taskIndex !== -1) {
+      col.tasks = [
+        ...col.tasks.slice(0, taskIndex),
+        data,
+        ...col.tasks.slice(taskIndex + 1)
+      ]
+    }
   }
   showTaskModal.value = false
 }
@@ -164,7 +182,7 @@ const onEditTask = (task) => {
 
 const onDeleteTask = (task) => {
   taskToDelete.value = task
-  showDeleteModal.value = true
+  showDeleteTaskModal.value = true
 }
 
 const confirmDeleteTask = async () => {
@@ -177,9 +195,27 @@ const confirmDeleteTask = async () => {
   }
 
   await api.delete(`/tasks/${taskToDelete.value.id}`)
-  showDeleteModal.value = false
+  showDeleteTaskModal.value = false
   taskToDelete.value = null
 }
+
+const onDeleteColumn = (column) => {
+  columnToDelete.value = column
+  showDeleteColumnModal.value = true
+}
+
+const confirmDeleteColumn = async () => {
+  if (!columnToDelete.value) return
+
+  if (columnToDelete.value.tasks.length > 0) return
+
+  await api.delete(`/columns/${columnToDelete.value.id}`)
+
+  columns.value = columns.value.filter(col => col.id !== columnToDelete.value.id)
+
+  showDeleteColumnModal.value = false
+  columnToDelete.value = null
+} 
 
 const handleCreateColumn = async (title) => {
   if (!title) return
