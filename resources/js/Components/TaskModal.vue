@@ -33,7 +33,6 @@
             type="date"
             class="border border-gray-300 rounded-lg w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             ref="dueDateInput"
-            :min="today"
             @mousedown.prevent="openDatePicker"
           />
         </div>
@@ -94,17 +93,16 @@ const emit = defineEmits(['close', 'submit'])
 const form = ref({
   title: props.task?.title || '',
   description: props.task?.description || '',
-  due_date: props.task?.due_date || '',
+  due_date: toLocaleDateString(props.task?.due_date),
   status: props.task?.status || 'not-started',
   priority: props.task?.priority || 'low'
 })
-
 
 watch(() => props.task, (val) => {
   form.value = {
     title: val?.title || '',
     description: val?.description || '',
-    due_date: val?.due_date || '',
+    due_date: toLocaleDateString(val?.due_date),
     status: val?.status || 'not-started',
     priority: val?.priority || 'low'
   }
@@ -118,13 +116,15 @@ watch(() => props.isOpen, (open) => {
   }
 })
 
-const today = computed(() => {
-  const date = new Date()
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-})
+function toLocaleDateString(dateStr) {
+  if (!dateStr) return ''
+
+  const date = new Date(dateStr)
+  const yyyy = date.getUTCFullYear()
+  const mm = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(date.getUTCDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
 
 const close = () => emit('close')
 const submit = () => {
