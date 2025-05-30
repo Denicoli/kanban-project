@@ -4,7 +4,7 @@
 
     <div class="p-6 min-h-screen">
       <!-- Board Header -->
-      <div class="flex justify-end items-end mb-4">
+      <div class="flex justify-start items-start mb-4">
         <button 
           @click="openModal"
           class="flex items-center space-x-2 bg-blue-600 text-white font-semibold rounded-full px-4 py-2 transition-colors
@@ -43,14 +43,14 @@
           </div>
         </div>
       </div>
-      <div v-else class="text-gray-500 text-sm mt-4">No boards yet.</div>
+      <div v-else class="flex justify-center text-gray-500 text-sm mt-4">No boards yet.</div>
 
       <BoardModal
         v-if="showModal"
         :isOpen="showModal"
-        @close="showModal = false"
-        @created="fetchBoards"
         :board="selectedBoard"
+        @close="showModal = false"
+        @submit="handleBoardSubmit"
       />
       <DeleteBoardModal
         :isOpen="showDeleteBoardModal"
@@ -126,6 +126,19 @@ const confirmDeleteBoard = async () => {
     boardToDelete.value = null
   } catch (error) {
     console.error('Failed to delete board: ', error)
+  }
+}
+
+const handleBoardSubmit = async (form) => {
+  try {
+    if (form.id) {
+      await api.put(`/boards/${form.id}`, form)
+    } else {
+      await api.post('/boards', form)
+    }
+    fetchBoards()
+  } catch (error) {
+    console.error('Error saving board:', error)
   }
 }
 
